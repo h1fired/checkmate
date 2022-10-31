@@ -4,7 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
+import java.awt.Rectangle;
+import java.awt.geom.Ellipse2D;
 
 import com.checkmate.core.components.button.CustomButton;
 import com.checkmate.core.entity.EntityObject;
@@ -14,7 +15,6 @@ import com.checkmate.core.gfx.Text;
 public class Renderer {
 	
 	private Graphics2D g;
-	private BufferedImage image;
 	
 	public Renderer(Graphics2D g) {
 		this.g = g;
@@ -23,6 +23,10 @@ public class Renderer {
 	public void drawImage(Sprite sprite) 
 	{	
 		g.drawImage(sprite.getImage(), (int)sprite.getPosition().getX(), (int)sprite.getPosition().getY(), (int)(sprite.getImage().getWidth() * sprite.getRenderScale()), (int)(sprite.getImage().getHeight() * sprite.getRenderScale()), null);
+	}
+	
+	public void drawImageTile(Sprite sprite, int x, int y, int width, int height) {
+		g.drawImage(sprite.getImage(), x, y, width, height, null);
 	}
 	
 	public void drawEntityObject(EntityObject object) 
@@ -55,6 +59,20 @@ public class Renderer {
 		g.fillOval(x, y, width, height);
 	}
 	
+	public void drawRect(int thickness, Color color, int x, int y, int width, int height) 
+	{
+		g.setColor(color);
+		g.setStroke(new BasicStroke(thickness));
+		g.drawRect(x, y, width, height);
+		g.setStroke(g.getStroke());
+	}
+	
+	public void fillRect(Color color, int x, int y, int width, int height) 
+	{
+		g.setColor(color);
+		g.fillRect(x, y, width, height);
+	}
+	
 	public void drawString(Text text) 
 	{
 		g.setColor(text.getColor());
@@ -80,9 +98,23 @@ public class Renderer {
 		g.drawString(text, x, y);
 	}
 	
+	
 	public void drawButton(CustomButton button) {
-		g.setColor(Color.red);
-		g.fillRect((int)button.getPosition().getX(), (int)button.getPosition().getY(), button.getWidth(), button.getHeight());
+		if(button.getCaption() != null) {
+			g.setColor(Color.decode("#191919"));
+			g.fillRect((int)button.getPosition().getX(), (int)button.getPosition().getY(), button.getWidth(), button.getHeight());
+			drawString(button.getCaption());
+		}
+	}
+	
+	public void fillEllipse(Ellipse2D ellipse) {
+		g.setColor(Color.decode("#c89862"));
+		g.fill(ellipse);
+	}
+	
+	public void fillRectangle2D(Rectangle rect) {
+		g.setColor(Color.white);
+		g.fill(rect);
 	}
 	
 	

@@ -22,4 +22,5 @@ public class ResourceLoader {
 		
 		return image;
 	}
+	
 }

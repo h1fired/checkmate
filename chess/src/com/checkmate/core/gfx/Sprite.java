@@ -13,7 +13,6 @@ public class Sprite {
 	
 	private BufferedImage image;
 	private ResourceLoader fileLoader;
-	private String path = "res/";
 	private boolean isVisible;
 	
 	public Sprite(BufferedImage image) 
@@ -25,7 +24,7 @@ public class Sprite {
 	public Sprite(String filename) 
 	{
 		fileLoader = new ResourceLoader();
-		image = fileLoader.loadImage(path + filename);
+		image = fileLoader.loadImage(filename);
 		settings();
 	}
 	

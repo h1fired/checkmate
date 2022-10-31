@@ -111,9 +111,7 @@ public class Text {
 		this.color = color;
 	}
 	
-	public void setColor(String hex) {
-		this.color = color.decode(hex);
-	}
+
 	
 	public void setColor(int r, int g, int b) {
 		this.color = new Color(r, g, b);

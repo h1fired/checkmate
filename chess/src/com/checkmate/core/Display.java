@@ -11,6 +11,7 @@ import java.awt.image.DataBufferInt;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
+import javax.swing.WindowConstants;
 
 public class Display {
 	
@@ -36,7 +37,7 @@ public class Display {
 		canvas.setPreferredSize(size);
 		
 		frame = new JFrame(title);
-		frame.setDefaultCloseOperation(frame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setResizable(false);
 		frame.getContentPane().add(canvas);
 		frame.pack();
@@ -48,14 +49,16 @@ public class Display {
 		bufferData = ((DataBufferInt)buffer.getRaster().getDataBuffer()).getData();
 		bufferGraphics = buffer.getGraphics();
 		((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		//((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		
+		((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+		((Graphics2D)bufferGraphics).setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		clearColor = 0xff000000;
 		
 		//Мультибуферизація
 		canvas.createBufferStrategy(numBuffers);
 		bufferStrategy = canvas.getBufferStrategy();
+		
 		
 	}
 	
@@ -85,6 +88,9 @@ public class Display {
 			return;
 		
 		isCreated = false;
+		
+		bufferGraphics.dispose();
+		bufferStrategy.dispose();
 		frame.dispose();
 	}
 	

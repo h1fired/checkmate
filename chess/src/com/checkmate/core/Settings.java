@@ -6,6 +6,8 @@ public class Settings {
 	public static int HEIGHT = 720;
 	public static float FPS = 60.0f;
 	
+	public static int SINGLE_TEX_SCALE = 128;
+	
 	public static String TITLE = "Checkmate";
 	
 	public static enum STATES{

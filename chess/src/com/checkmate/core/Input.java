@@ -11,6 +11,7 @@ public class Input implements MouseListener, MouseMotionListener{
 	private static Position mousePosition;
 	private static boolean isMouseClicked;
 	private static boolean isMousePressed;
+	private static boolean isMouseReleased;
 	
 	public Input() {
 		mousePosition = new Position(0, 0);
@@ -28,10 +29,14 @@ public class Input implements MouseListener, MouseMotionListener{
 		return isMousePressed;
 	}
 	
-	public static void clearMouseClick() {
-		isMouseClicked = false;
+	public static boolean isMouseReleased() {
+		return isMouseReleased;
 	}
 	
+	public static void clearMouseClick() {
+		isMouseClicked = false;
+		isMouseReleased = false;
+	}
 
 
 	@Override
@@ -64,6 +69,7 @@ public class Input implements MouseListener, MouseMotionListener{
 	public void mouseReleased(MouseEvent e) {
 		isMouseClicked = false;
 		isMousePressed = false;
+		isMouseReleased = true;
 		
 	}
 

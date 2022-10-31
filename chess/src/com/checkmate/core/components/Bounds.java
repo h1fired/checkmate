@@ -9,11 +9,18 @@ public class Bounds {
 	private int maxX = 0;
 	private int maxY = 0;
 	
+	public Bounds() {
+		this.x = 0;
+		this.y = 0;
+		this.maxX = x + 0;
+		this.maxY = y + 0;
+	}
+	
 	public Bounds(int x, int y, int maxX, int maxY) {
 		this.x = x;
 		this.y = y;
 		this.maxX = x + maxX;
-		this.maxY = x + maxY;
+		this.maxY = y + maxY;
 	}
 	
 	public boolean isContain() {

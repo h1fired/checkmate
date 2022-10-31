@@ -28,6 +28,13 @@ public class EntityObject extends Animation{
 	private Bounds bounds;
 	private AnchorPoint anchor;
 	
+	//limit
+	private Bounds limitBounds;
+	
+	public EntityObject() {
+		settings();
+	}
+	
 	public EntityObject(BufferedImage image)
 	{
 		this.image = image;
@@ -60,7 +67,8 @@ public class EntityObject extends Animation{
 		initAnchorPoint();
 		
 		
-		bounds = new Bounds(0, 0, (int)(image.getWidth() * this.scale), (int)(image.getHeight() * this.scale));
+		//bounds = new Bounds(0, 0, (int)(image.getWidth() * this.scale), (int)(image.getHeight() * this.scale));
+		bounds = new Bounds();
 	}
 	
 	//BOUNDS
@@ -134,6 +142,8 @@ public class EntityObject extends Animation{
 	}
 	
 	
+	
+	
 	//GETTERS SETTERS
 	public BufferedImage getImage() 
 	{
@@ -193,6 +203,19 @@ public class EntityObject extends Animation{
 		return isVisible;
 	}
 	
+	//bounded
+	public void setBounded(boolean bounded) {
+		if(bounded) {
+			isBounded = true;
+		}else {
+			isBounded = false;
+		}
+	}
+	
+	public boolean getBounded() {
+		return isBounded;
+	}
+	
 	//scaled position
 	public Position getScaledPos() {
 		return new Position(scaled_x, scaled_y);
@@ -205,6 +228,29 @@ public class EntityObject extends Animation{
 	
 	public boolean isAnimatedDrag() {
 		return isAnimatedDrag;
+	}
+	
+	//activity
+	public void setActive(boolean active) {
+		if(active) {
+			isBounded = true;
+		}else {
+			isBounded = false;
+			
+		}
+	}
+	
+	public boolean isActive() {
+		return isBounded;
+	}
+	
+	//Limit Move
+	public void setLimit(Bounds bound) {
+		limitBounds = bound;
+	}
+	
+	public Bounds getLimit() {
+		return limitBounds;
 	}
 	
 	//OTHER
