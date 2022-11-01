@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import com.checkmate.core.Input;
 import com.checkmate.core.Renderer;
 import com.checkmate.core.Settings;
+import com.checkmate.core.Sound;
 import com.checkmate.core.components.Bounds;
 import com.checkmate.core.gfx.Sprite;
 import com.checkmate.core.utils.Position;
@@ -18,6 +19,10 @@ public class Board {
 	private Move movement;
 	private boolean inputActivity;
 	private boolean boardActivity;
+	
+	// Sound
+	private Sound s_wrongMove;
+	private Sound s_move;
 	
 	// CheckMate
 	private boolean checkMate;
@@ -49,9 +54,11 @@ public class Board {
 	private Position end;
 	
 	
+	
 	//Saver VARS
 	private ArrayList<Figure> killedFiguresWhite = new ArrayList<Figure>();
 	private ArrayList<Figure> killedFiguresBlack = new ArrayList<Figure>();
+	private int movesCount;
 	
 	
 	
@@ -62,15 +69,17 @@ public class Board {
 		this.boardScale = scale;
 		this.boardX = x;
 		this.boardY = y;
+		
 		this.boardActivity = true;
+		this.checkMate = false;
+		this.movesCount = 0;
 		this.checkMate = false;
 		
 		this.start = new Position(0, 0);
 		this.end = new Position(0, 0);
 		this.killedKing = 0;
 		
-		
-		FigurePos.reset();
+		initSounds();
 		initBoard();
 		initFigures();
 		setFiguresPos();
@@ -78,53 +87,113 @@ public class Board {
 		setPlayer(true);
 	}
 	
+	public void reset() {
+		//other
+		killedFiguresWhite.clear();
+		killedFiguresBlack.clear();
+		prevCell = cells[0][0];
+		
+		this.boardActivity = false;
+		this.checkMate = false;
+		this.movesCount = 0;
+		this.start = new Position(0, 0);
+		this.end = new Position(0, 0);
+		this.killedKing = 0;
+		this.player = true;
+		FigurePos.reset();
+		prevFigureIndex = 0;
+		
+		movement.reset(this);
+		
+		for(int i = 0; i < 32; i++) {
+			
+			if(figures[i].isWhite()) {
+				figures[i].setEnable(true);
+			}
+			
+			figures[i].setVisible(true);
+			figures[i].setKilled(false);
+		}
+		
+		//cells
+		int c = 0;
+		for(int i = 0; i < Game.getMapSize(); i++) {
+			for(int j = 0; j < Game.getMapSize(); j++) {
+				cells[i][j].setFigure(null);
+				if(FigurePos.map[i][j] != 0) {
+					cells[i][j].setFigure(figures[c]);
+					c++;
+				}
+				
+			}
+		}
+		
+		
+		this.boardActivity = true;
+	}
+	
 	
 	//INPUT DETECTION
 	private void inputDetect() {
 		
-		if(Input.isMousePressed() && !inputActivity && boardActivity) {
-			
-			for(int s = 0; s < 2; s++) {
-				for(int i = 0; i < 32; i++) {
-					if(figures[i].getBounds().isContain()) {
-						prevFigureIndex = i;
-						for(int j = 0; j < Game.getMapSize(); j++) {
-							for(int c = 0; c < Game.getMapSize(); c++) {
-								if(player) {
-									if(cells[j][c].getBounds().isContain() && cells[j][c].getFigure().isWhite()) {
-										start.setX(cells[j][c].getCoordinate().getX());
-										start.setY(cells[j][c].getCoordinate().getY());
-										movement.calculateMoves(this, start);
+		if(true) {
+			if(Input.isMousePressed() && !inputActivity && boardActivity) {
+				
+				for(int s = 0; s < 2; s++) {
+					for(int i = 0; i < 32; i++) {
+						if(figures[i].getBounds().isContain()) {
+							prevFigureIndex = i;
+							for(int j = 0; j < Game.getMapSize(); j++) {
+								for(int c = 0; c < Game.getMapSize(); c++) {
+									if(player) {
+										if(cells[j][c].getFigure() != null) {
+											if(cells[j][c].getBounds().isContain() && cells[j][c].getFigure().isWhite()) {
+												start.setX(cells[j][c].getCoordinate().getX());
+												start.setY(cells[j][c].getCoordinate().getY());
+												movement.calculateMoves(this, start);
+											}
+										}
+									}else {
+										if(cells[j][c].getFigure() != null) {
+											if(cells[j][c].getBounds().isContain() && !cells[j][c].getFigure().isWhite()) {
+												start.setX(cells[j][c].getCoordinate().getX());
+												start.setY(cells[j][c].getCoordinate().getY());
+												movement.calculateMoves(this, start);
+											}
+										}
 									}
-								}else {
-									if(cells[j][c].getBounds().isContain() && !cells[j][c].getFigure().isWhite()) {
-										start.setX(cells[j][c].getCoordinate().getX());
-										start.setY(cells[j][c].getCoordinate().getY());
-										movement.calculateMoves(this, start);
-									}
+									
 								}
-								
 							}
 						}
 					}
 				}
+				
+				//figuresUndetect();
+				
+				inputActivity = true;
 			}
 			
-			//figuresUndetect();
-			
-			inputActivity = true;
-		}
-		
-		if(!Input.isMousePressed() && inputActivity && boardActivity) {
-			
-			moveLogic();
-			
-			//dont change
-			inputActivity = false;
+			if(!Input.isMousePressed() && inputActivity && boardActivity) {
+				
+				moveLogic();
+				
+				//dont change
+				inputActivity = false;
+			}
 		}
 		
 	}
 
+	private void initSounds() {
+		
+		s_move = new Sound();
+		s_move.setFile("chess_move.wav");
+		
+		s_wrongMove = new Sound();
+		s_wrongMove.setFile("wrong_move.wav");
+	}
+	
 	private void showHints() {
 		
 		for(int i = 0; i < movement.getPosMoveSize(); i++) {
@@ -142,7 +211,6 @@ public class Board {
 			
 			rs.fillOval(Color.decode("#ac3232"), x_c + 22, y_c + 22, 20, 20);
 			
-			System.out.println(x_c + " | " + y_c);
 		}
 		
 		
@@ -168,7 +236,7 @@ public class Board {
 	//Figures Init Func
 	private void initFigures() 
 	{
-		figures = null;
+		
 		figures = new Figure[32];
 		int c = 0;
 		
@@ -282,16 +350,8 @@ public class Board {
 	}
 	
 	//Figures Set Center Position
-	private void setCenterPos() {
-		for(int i = 0; i < Game.getMapSize(); i++) {
-			for(int j = 0; j < Game.getMapSize(); j++) {
-				if(cells[i][j].getBounds().isContain()) {
-					if(figures[prevFigureIndex].isContain()) {
-						figures[prevFigureIndex].setPosition((int)cells[i][j].getPosition().getX(), (int)cells[i][j].getPosition().getY());
-					}
-				}
-			}
-		}
+	private void setCenterPos(int i, int j) {
+		figures[prevFigureIndex].setPosition((int)cells[i][j].getPosition().getX(), (int)cells[i][j].getPosition().getY());
 	}
 	
 	//Cells Init Func
@@ -357,230 +417,214 @@ public class Board {
 	//Chess Move Logic
 	private void moveLogic() {
 		
-		for(int i = 0; i < 32; i++) {
-			if(figures[i].getBounds().isContain()) {
-				for(int j = 0; j < Game.getMapSize(); j++) {
-					for(int c = 0; c < Game.getMapSize(); c++) {
-						
-						if(end.getX() == start.getX() && end.getY() == start.getY()) {
-							posNull();
-							return;
-						}
-						
-						if(player) {
-							if(!figures[prevFigureIndex].isWhite()) {
-								return;
-							}
-							
-							if(cells[j][c].getBounds().isContain()) {
-								//detect END position
-								if(FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 1 && end.getX() != start.getX()) {
-									end.setX(cells[j][c].getCoordinate().getX());
-									end.setY(cells[j][c].getCoordinate().getY());
-									
-									
-								}else {
-									if(Input.isMouseClicked()) {
-										return;
-									}
-								}
-								
-								if(end.getX() != -1 && end.getY() != -1) {
-									//kill enemy
-									if(!possibleMove()) {
-										int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-										int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-										
-										figures[prevFigureIndex].setPosition(x_s, y_s);
-										posNull();
-										
-										return;
-									}
-									
-									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 2) {
-										if(cells[j][c].getFigure() == figures[i]) {
-											figures[i].setEnable(false);
-											figures[i].setVisible(false);
-											figures[i].setKilled(true);
-											killedFiguresBlack.add(figures[i]);
-											if(figures[i].getType() == "king") {
-												killedKing = 1;
-											}
-											
-											movement.moveToKilled(this, start, end);
-											checkmateDetect();
-											setCenterPos();
-											
-											
-											setPlayer(false);
-											
-											
-											
-											return;
-										}
-										
-										
-									}
-									//move back if team figure
-									else if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 1) {
-										int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-										int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-										
-										figures[prevFigureIndex].setPosition(x_s, y_s);
-										posNull();
-										
-										
-										
-										return;
-									}
-									//move to clear cell
-									else if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 0) {
-										
-										if(!possibleMove()) {
-											int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-											int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-											
-											figures[prevFigureIndex].setPosition(x_s, y_s);
-											
-											return;
-										}
-										
-										//if possible move
-										movement.moveTo(this, start, end);
-										checkmateDetect();
-										
-										setCenterPos();
-										setPlayer(false);
-										
-										
-										
-										return;
-									}
-								}
-								
-								
-							}else if(!bounds.isContain()) {
-								int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-								int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-								
-								figures[prevFigureIndex].setPosition(x_s, y_s);
-								posNull();
-								
-								
-								return;
-							}
-							
-							
-							
-						}else {
-							if(figures[prevFigureIndex].isWhite()) {
-								return;
-							}
-							
-							if(cells[j][c].getBounds().isContain()) {
-								//detect END position
-								if(FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 2 && end.getX() != start.getX()) {
-									end.setX(cells[j][c].getCoordinate().getX());
-									end.setY(cells[j][c].getCoordinate().getY());
-									
-									
-								}else {
-									if(Input.isMouseClicked()) {
-										return;
-									}
-								}
-								
-								if(end.getX() != -1 && end.getY() != -1) {
-									//kill enemy
-									if(!possibleMove()) {
-										int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-										int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-										
-										figures[prevFigureIndex].setPosition(x_s, y_s);
-										posNull();
-										
-										return;
-									}
-									
-									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 1) {
-										if(cells[j][c].getFigure() == figures[i]) {
-											figures[i].setEnable(false);
-											figures[i].setVisible(false);
-											figures[i].setKilled(true);
-											killedFiguresWhite.add(figures[i]);
-											if(figures[i].getType() == "king") {
-												killedKing = 2;
-											}
-											
-											movement.moveToKilled(this, start, end);
-											checkmateDetect();
-											setCenterPos();
-											
-											
-											setPlayer(true);
-											
-											posNull();
-											
-											
-											return;
-										}
-										
-										
-									}
-									//move back if team figure
-									else if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 2) {
-										int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-										int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-										
-										figures[prevFigureIndex].setPosition(x_s, y_s);
-										posNull();
-										
-										
-										
-										return;
-									}
-									//move to clear cell
-									else if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 0) {
-										
-										if(!possibleMove()) {
-											int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-											int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-											
-											figures[prevFigureIndex].setPosition(x_s, y_s);								
-											return;
-										}
-										
-										//if possible move
-										movement.moveTo(this, start, end);
-										checkmateDetect();
-										
-										setCenterPos();
-										setPlayer(true);
-										
-										
-										
-										return;
-									}
-								}
-								
-							}else if(!bounds.isContain()) {
-								int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
-								int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
-								
-								figures[prevFigureIndex].setPosition(x_s, y_s);
-								posNull();
-								
-								
-								return;
-							}
-						}
-						
-						
-						
-					}
-				}
+		
+		
+		if(player) {
+			if(!figures[prevFigureIndex].isWhite()) {
+				return;
+			}
+		}else {
+			if(figures[prevFigureIndex].isWhite()) {
+				return;
 			}
 		}
+		
+		//IF FIGURE UNZONE
+		if(!bounds.isContain()) {
+			int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
+			int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
+			
+			figures[prevFigureIndex].setPosition(x_s, y_s);
+			s_wrongMove.play();
+			return;
+		}
+		
+		
+		
+		for(int i = 0; i < Game.getMapSize(); i++) {
+			for(int j = 0; j < Game.getMapSize(); j++) {
+				
+				if(cells[i][j].getBounds().isContain()) {
+					if(cells[i][j] != null) {
+						
+						if(player) { // WHITE PLAYER
+							if(cells[i][j].getBounds().isContain()) {
+								setCenterPos(i, j);
+								//END COORDINATE
+								if(FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 1 || FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 0) {
+									end.setX(cells[i][j].getCoordinate().getX());
+									end.setY(cells[i][j].getCoordinate().getY());
+									
+									//IF equals true - return
+									if(end.getX() == start.getX() && end.getY() == start.getY()) {
+										
+										return;
+									}
+									
+								}else {
+									if(Input.isMouseClicked()) {
+										return;
+									}
+								}
+								
+								
+								//IF POSSIBLE MOVE
+								if(!possibleMove()) {
+									int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
+									int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
+									
+									figures[prevFigureIndex].setPosition(x_s, y_s);
+									s_wrongMove.play();
+									
+								}else {
+									
+									//IF TEAM FIGURE
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 1) {
+										setCenterPos((int)start.getX(), (int)start.getY());
+										s_wrongMove.play();
+									}
+									
+									//IF ENEMY FIGURE
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 2) {
+										
+										for(int s = 0; s < 32; s++) {
+											if(cells[i][j].getFigure() == figures[s]) {
+												figures[s].setEnable(false);
+												figures[s].setVisible(false);
+												figures[s].setKilled(true);
+												killedFiguresBlack.add(figures[s]);
+												if(figures[s].getType() == "king") {
+													killedKing = 1;
+												}
+												
+												
+											}
+										}
+										
+										movement.moveToKilled(this, start, end);
+										setCenterPos(i, j);
+										
+										checkmateDetect();
+										
+										
+										s_move.play();
+										setPlayer(false);
+										
+									}
+									
+									//IF CLEAR CELL
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 0) {
+										movement.moveTo(this, start, end);
+										setCenterPos(i, j);
+										
+										checkmateDetect();
+										
+										s_move.play();
+										setPlayer(false);
+									}
+									
+									
+									
+								}
+								
+								
+							}
+							
+							
+						}else { //BLACK PLAYER
+							if(cells[i][j].getBounds().isContain()) {
+								setCenterPos(i, j);
+								//END COORDINATE
+								if(FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 2 || FigurePos.map[(int)start.getX()][(int)start.getY()] / 10 == 0) {
+									end.setX(cells[i][j].getCoordinate().getX());
+									end.setY(cells[i][j].getCoordinate().getY());
+									
+									//IF equals true - return
+									if(end.getX() == start.getX() && end.getY() == start.getY()) {
+										
+										return;
+									}
+									
+								}else {
+									if(Input.isMouseClicked()) {
+										return;
+									}
+								}
+								
+								
+								//IF POSSIBLE MOVE
+								if(!possibleMove()) {
+									int x_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getX();
+									int y_s = (int)cells[(int)start.getX()][(int)start.getY()].getPosition().getY();
+									
+									figures[prevFigureIndex].setPosition(x_s, y_s);
+									s_wrongMove.play();
+									
+								}else {
+									
+									//IF TEAM FIGURE
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 2) {
+										setCenterPos((int)start.getX(), (int)start.getY());
+										s_wrongMove.play();
+									}
+									
+									//IF ENEMY FIGURE
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 1) {
+										
+										for(int s = 0; s < 32; s++) {
+											if(cells[i][j].getFigure() == figures[s]) {
+												figures[s].setEnable(false);
+												figures[s].setVisible(false);
+												figures[s].setKilled(true);
+												killedFiguresWhite.add(figures[s]);
+												if(figures[s].getType() == "king") {
+													killedKing = 2;
+												}
+												
+												
+											}
+										}
+										
+										movement.moveToKilled(this, start, end);
+										setCenterPos(i, j);
+										
+										checkmateDetect();
+										
+										
+										s_move.play();
+										setPlayer(true);
+										
+									}
+									
+									//IF CLEAR CELL
+									if(FigurePos.map[(int)end.getX()][(int)end.getY()] / 10 == 0) {
+										movement.moveTo(this, start, end);
+										setCenterPos(i, j);
+										
+										checkmateDetect();
+										
+										s_move.play();
+										setPlayer(true);
+									}
+									
+									
+									
+								}
+								
+								
+							}
+						}
+						
+					}
+					
+				}
+				
+				
+			}
+		}
+		
+		FigurePos.print();
+		
 	}
 	
 	//possible move
@@ -590,7 +634,7 @@ public class Board {
 		boolean isMove = false;
 		for(int s = 0; s < movement.getPosMoveSize(); s++) {
 			
-			//System.out.println("Poss Moves: X = (" + movement.getPosMove(s).getX() + ") || Y = (" + movement.getPosMove(s).getY() + ")");
+			System.out.println("Poss Moves: X = (" + movement.getPosMove(s).getX() + ") || Y = (" + movement.getPosMove(s).getY() + ")");
 			
 			if(end.getX() == movement.getPosMove(s).getX() && end.getY() == movement.getPosMove(s).getY()) {
 				isMove = true;
@@ -612,7 +656,7 @@ public class Board {
 	//RENDER & UPDATE
 	public void render() {
 		
-		printPoses();
+		//printPoses();
 		
 		drawBoard();
 		if(inputActivity) {
@@ -624,9 +668,18 @@ public class Board {
 		for(int i = 0; i < Game.getMapSize(); i++) {
 			for(int j = 0; j < Game.getMapSize(); j++) {
 				if(cells[i][j].getFigure() != null && cells[i][j].getBounds().isContain()) {
-					System.out.println("FIGURE: type = (" + cells[i][j].getFigure().getType() + ";");
+					//System.out.println("FIGURE: type = (" + cells[i][j].getFigure().getType() + "; " + cells[i][j].getFigure().isWhite());
 				}
 			}
+		}
+		
+		for(int i = 0; i < 32; i++) {
+			if(figures[i].isVisible()) {
+				rs.drawEntityObject(figures[i]);
+			}
+		}
+		if(figures[Board.prevFigureIndex].isVisible()) {
+			rs.drawEntityObject(figures[prevFigureIndex]);
 		}
 		
 		
@@ -634,11 +687,15 @@ public class Board {
 	
 	public void update() {
 		
+		//printPoses();
+		
 		if(boardActivity) {
+			for(int i = 0; i < 32; i++) {
+				figures[i].DragAnimation(figures[i]);
+			}
 			setActiveFigure();
 			
 			setSelection();
-			
 			inputDetect();
 		}
 		
@@ -719,6 +776,11 @@ public class Board {
 	//side win
 	public int getWinSide() {
 		return killedKing;
+	}
+	
+	//moves count
+	public int getMovesCount() {
+		return movesCount;
 	}
 	
 	//checkmate detect

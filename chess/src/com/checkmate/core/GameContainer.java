@@ -29,6 +29,7 @@ public class GameContainer implements Runnable {
 	private Thread thread;
 	private Display window;
 	private Input input;
+	private Renderer rs;
 	
 	
 	private boolean isRunning;
@@ -49,6 +50,7 @@ public class GameContainer implements Runnable {
 		window = new Display(WIDTH, HEIGHT, TITLE, NUM_BUFFERS);
 		input = new Input();
 		window.setMouseListener(input);//
+		rs = new Renderer(window.getGraphics());
 		Translate.setValues();
 		stats = new Statistics();
 		
@@ -170,9 +172,7 @@ public class GameContainer implements Runnable {
 			settings.update();
 		}
 		
-		for(int i = 0; i < 2; i++) {
-			Input.clearMouseClick();
-		}
+		Input.clearMouseClick();
 	}
 	
 	public void render() {
@@ -188,7 +188,7 @@ public class GameContainer implements Runnable {
 		
 		//every time stats render
 		if(stats.isVisible()) {
-			//stats.render(rs);
+			stats.render(rs);
 		}
 		
 		window.swapBuffers();

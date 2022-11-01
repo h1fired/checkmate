@@ -6,10 +6,10 @@ import java.awt.Graphics2D;
 import com.checkmate.chess.Board;
 import com.checkmate.chess.Timer;
 import com.checkmate.core.GameContainer;
-import com.checkmate.core.Input;
 import com.checkmate.core.Renderer;
 import com.checkmate.core.Settings;
 import com.checkmate.core.Settings.STATES;
+import com.checkmate.core.Sound;
 import com.checkmate.core.components.ObjectManager;
 import com.checkmate.core.components.State;
 import com.checkmate.core.components.button.CustomButton;
@@ -33,10 +33,15 @@ public class Game extends State{
 	
 	//WIN
 	private Text winText;
+	private Sound s_win;
+	private boolean oneSound;
 	
 	//Timer
 	private Timer timer;
 	private Sprite bgTimer;
+	
+	//Move Count
+	private Text moveCount;
 	
 	//Pause
 	private Sprite pauseMenu;
@@ -55,6 +60,9 @@ public class Game extends State{
 	//Background tex
 	private Sprite bgTex;
 	
+	//Restart Button
+	CustomButton button_restart;
+	
 	
 	@Override
 	public void init(GameContainer gc, Graphics2D g) 
@@ -70,18 +78,27 @@ public class Game extends State{
 		board.setPosition(360, 100);
 
 		for(int i = 0; i < 32; i++) {
-			manager.add(board.getFigures(i));
+			//manager.add(board.getFigures(i));
 		}
 		
 		
 		
 		//timer
-		bgTimer = new Sprite("/images/timer_fill.png");
+		bgTimer = new Sprite("images/timer_fill.png");
 		bgTimer.setRenderScale(2.8f);
 		bgTimer.setPosition(Settings.WIDTH - (int)(bgTimer.getImage().getWidth() * bgTimer.getRenderScale()) - 80, 10);
+		manager.add(bgTimer);
 		timer = new Timer();
 		timer.setPosition(Settings.WIDTH - timer.getText().getWidth() - 100, 32);
 		timer.start();
+		
+		//move count
+		moveCount = new Text("0");
+		moveCount.setPosition(Settings.WIDTH - moveCount.getWidth() / 2 - 122, 9);
+		moveCount.setColor(Color.black);
+		moveCount.setFontSize(20);
+		moveCount.setFont("Consolas");
+		manager.add(moveCount);
 		
 		//pause
 		pauseMenu = new Sprite("images/pause_panel.png");
@@ -99,15 +116,21 @@ public class Game extends State{
 		
 		//pause go menu
 		button_menu = new CustomButton(100, 500, 350, 50, Translate.UKR.get("go_menu"));
-		button_menu.setPosition(Settings.WIDTH / 2 - button_menu.getWidth() / 2 - 20, Settings.HEIGHT / 2 - button_menu.getHeight() + 45);
+		button_menu.setPosition(Settings.WIDTH / 2 - button_menu.getWidth() / 2 - 20, Settings.HEIGHT / 2 - button_menu.getHeight() + 90);
 		manager.add(button_menu);
 		button_menu.setVisible(false);
 		
 		//pause go to game
 		button_continue = new CustomButton(100, 700, 350, 50, Translate.UKR.get("go_continue"));
-		button_continue.setPosition(Settings.WIDTH / 2 - button_continue.getWidth() / 2-20, Settings.HEIGHT / 2 - button_menu.getHeight() - 20);
+		button_continue.setPosition(Settings.WIDTH / 2 - button_continue.getWidth() / 2-20, Settings.HEIGHT / 2 - button_menu.getHeight() - 70);
 		manager.add(button_continue);
 		button_continue.setVisible(false);
+		
+		//pause restart
+		button_restart = new CustomButton(1000, 500, 350, 50, Translate.UKR.get("restart"));
+		button_restart.setPosition(Settings.WIDTH / 2 - button_continue.getWidth() / 2-20, Settings.HEIGHT / 2 - button_menu.getHeight() + 10);
+		manager.add(button_restart);
+		button_restart.setVisible(false);
 		
 		//check mate
 		checkMate = new Sprite[2];
@@ -136,6 +159,12 @@ public class Game extends State{
 		bgTex = new Sprite("images/wood_bg.png");
 		bgTex.setRenderScale(2f);
 		
+		//sounds
+		s_win = new Sound();
+		s_win.setFile("win.wav");
+		oneSound = false;
+		
+		
 		
 	}
 	
@@ -144,17 +173,25 @@ public class Game extends State{
 	{
 		manager.update();
 		
+		
+		
 		if(board != null) {
 			board.update();
 		}
 		
 		
 		timer.update();
+		moveCount.setText(Integer.toString(board.getMovesCount()));
+		moveCount.setPosition(Settings.WIDTH - moveCount.getWidth() / 2 - 135, 9);
 		
 		if(board != null) {
 			if(board.getWinSide() == 1) {
 				board.setActive(false);
-				
+				timer.stop();
+				if(!oneSound) {
+					s_win.play();
+					oneSound = true;
+				}
 				if(Translate.LANGUAGE == 1) {
 					winText.setText("Виграла команда чорних!");
 				}else if(Translate.LANGUAGE == 2) {
@@ -162,20 +199,22 @@ public class Game extends State{
 				}
 			}else if(board.getWinSide() == 2) {
 				board.setActive(false);
+				timer.stop();
+				if(!oneSound) {
+					s_win.play();
+					oneSound = true;
+				}
 				if(Translate.LANGUAGE == 1) {
 					winText.setText("Виграла команда білих!");
 				}else if(Translate.LANGUAGE == 2) {
 					winText.setText("WHITE TEAM WIN!");
 				}
 				
+			}else {
+				oneSound = false;
 			}
 		}
 		
-		if(Input.isMouseClicked()) {
-			if(board.getWinSide() == 1 || board.getWinSide() == 2) {
-				Settings.CURRENT_STATE = STATES.MENU;
-			}
-		}
 		
 		if(button_pause.isClicked()) {
 			pauseShow = true;
@@ -184,8 +223,18 @@ public class Game extends State{
 			pauseShow = false;
 		}
 		if(button_menu.isClicked()) {
+			pauseShow = false;
 			Settings.CURRENT_STATE = STATES.MENU;
 		}
+		if(button_restart.isClicked()) {
+			board.setActive(true);
+			board.reset();
+			timer.reset();
+			pauseShow = false;
+		}
+		
+		
+		
 		
 		
 		changeLang();
@@ -205,10 +254,9 @@ public class Game extends State{
 		manager.render();
 		
 		pausePanel();
-		//time
-		rs.drawImage(bgTimer);
 		timer.render(rs);
 		checkMatePanel();
+		
 		
 		
 	}
@@ -251,6 +299,7 @@ public class Game extends State{
 				pauseMenu.setVisible(true);
 				button_pause.setEnabled(false);
 				button_menu.setVisible(true);
+				button_restart.setVisible(true);
 				button_continue.setVisible(true);
 				if(board != null) {
 					board.setActive(false);
@@ -263,6 +312,7 @@ public class Game extends State{
 				pauseMenu.setVisible(false);
 				button_pause.setEnabled(true);
 				button_menu.setVisible(false);
+				button_restart.setVisible(false);
 				button_continue.setVisible(false);
 				if(board != null) {
 					board.setActive(true);
@@ -274,7 +324,7 @@ public class Game extends State{
 	}
 	
 	private void checkMatePanel() {
-		if(board != null) {
+		if(board != null) { 
 			if(board.isCheckmate()) {
 				rs.drawImage(checkMate[1]);
 			}else {
@@ -286,6 +336,13 @@ public class Game extends State{
 	//GETTERS & SETTERS
 	public static int getMapSize() {
 		return mapSize;
+	}
+	
+	public Board getBoard() {
+		if(this.board != null) {
+			return this.board;
+		}
+		return null;
 	}
 	
 	

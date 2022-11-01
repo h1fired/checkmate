@@ -24,6 +24,7 @@ public class Translate {
 		UKR.put("go_menu", "Закінчити гру");
 		UKR.put("go_continue", "Продовжити гру");
 		UKR.put("checkmate", "Мат");
+		UKR.put("restart", "Рестарт");
 		
 		ENG.put("start_part", "Start Game");
 		ENG.put("exit", "Exit");
@@ -38,6 +39,7 @@ public class Translate {
 		ENG.put("menu", "Menu");
 		ENG.put("go_continue", "Resume");
 		ENG.put("checkmate", "Mate");
+		ENG.put("restart", "Restart");
 	}
 
 	

@@ -1,7 +1,8 @@
 package com.checkmate.core;
 
-import java.io.File;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -17,9 +18,15 @@ public class Sound {
 	
 	public void setFile(String fileName) {
 		
+		String fullpath = "/com/checkmate/Resources/sounds/" + fileName;
+		
+		InputStream audioSrc = Sound.class.getResourceAsStream(fullpath);
+		
+		InputStream bufferedIn = new BufferedInputStream(audioSrc);
+		
 		try {
-			File file = new File("res/sounds/" + fileName);
-			AudioInputStream sound = AudioSystem.getAudioInputStream(file);
+			
+			AudioInputStream sound = AudioSystem.getAudioInputStream(bufferedIn);
 			
 			try {
 				clip = AudioSystem.getClip();

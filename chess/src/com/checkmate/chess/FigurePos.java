@@ -1,5 +1,7 @@
 package com.checkmate.chess;
 
+import java.util.Arrays;
+
 public class FigurePos {
 	
 	private static int backup_map[][] = {
@@ -25,7 +27,23 @@ public class FigurePos {
 	};
 	
 	public static void reset() {
-		map = backup_map;
+		
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				map[i][j] = backup_map[i][j];
+			}
+			
+		}
+		
+	}
+	
+	public static void print() {
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				System.out.print(map[i][j] + " ");
+			}
+			System.out.println();
+		}
 	}
 	
 }

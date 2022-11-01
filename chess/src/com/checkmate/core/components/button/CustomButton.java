@@ -78,9 +78,17 @@ public class CustomButton {
 	}
 	
 	public void update() {
+		
+		//second
+		
+		
+		
+		
 		if(enabled && visible && bounds.isContain()) {
-			if(Input.isMouseClicked()) {
+			
+			if(Input.isMouseReleased()) {
 				clicked = true;
+				
 				
 			}
 			if(click == null) {
@@ -97,8 +105,12 @@ public class CustomButton {
 			
 		}
 		
-		if(!Input.isMouseClicked()) {
+		if(!Input.isMouseReleased()) {
 			clicked = false;
+		}
+		
+		if(clicked) {
+			System.out.println("CLICKED!");
 		}
 	}
 	

@@ -2,6 +2,7 @@ package com.checkmate.chess;
 
 import java.util.ArrayList;
 
+import com.checkmate.core.Settings;
 import com.checkmate.core.utils.Position;
 import com.checkmate.state.Game;
 
@@ -14,9 +15,10 @@ public class Move {
 	private boolean detectSide;
 	private int startPawnPos;
 	
+	
+	
 	public void moveTo(Board board, Position start, Position end) 
 	{
-		
 		int tmp = FigurePos.map[(int)start.getX()][(int)start.getY()];
 		FigurePos.map[(int)start.getX()][(int)start.getY()] = FigurePos.map[(int)end.getX()][(int)end.getY()];
 		FigurePos.map[(int)end.getX()][(int)end.getY()] = tmp;
@@ -24,11 +26,15 @@ public class Move {
 		board.getCell((int)end.getX(), (int)end.getY()).setFigure(board.getCell((int)start.getX(), (int)start.getY()).getFigure());
 		board.getCell((int)start.getX(), (int)start.getY()).setFigure(null);
 		
+		
+		
+		
 		//FigurePos.printMap();
 	}
 	
 	public void moveToKilled(Board board, Position start, Position end) 
 	{
+		
 		
 		FigurePos.map[(int)end.getX()][(int)end.getY()] = FigurePos.map[(int)start.getX()][(int)start.getY()];
 		FigurePos.map[(int)start.getX()][(int)start.getY()] = 0;
@@ -36,8 +42,23 @@ public class Move {
 		board.getCell((int)end.getX(), (int)end.getY()).setFigure(board.getCell((int)start.getX(), (int)start.getY()).getFigure());
 		board.getCell((int)start.getX(), (int)start.getY()).setFigure(null);
 		
+		
 		//FigurePos.printMap();
 	}
+	
+	public void reset(Board board) {
+		
+		int c = 0;
+		for(int i = 0; i < Game.getMapSize(); i++) {
+			for(int j = 0; j < Game.getMapSize(); j++) {
+				if(FigurePos.map[i][j] != 0) {
+					board.getFigures(c).setPosition(360 + (j * (int)(Settings.SINGLE_TEX_SCALE * 0.5f)) , 100 + (i * (int)(Settings.SINGLE_TEX_SCALE * 0.5f)));
+					c++;
+				}
+				
+			}
+		}
+	} 
 	
 	//detect all moves
 	public void movesAllDetect(Board board) {

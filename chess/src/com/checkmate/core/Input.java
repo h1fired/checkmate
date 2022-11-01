@@ -36,6 +36,7 @@ public class Input implements MouseListener, MouseMotionListener{
 	public static void clearMouseClick() {
 		isMouseClicked = false;
 		isMouseReleased = false;
+		
 	}
 
 

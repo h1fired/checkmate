@@ -96,6 +96,8 @@ public class Menu extends State{
 		bgTex.setRenderScale(1.5f);
 		
 		
+		
+		
 	}
 	
 	private void changeLang() {
@@ -127,6 +129,7 @@ public class Menu extends State{
 		manager.update();
 		
 		if(button_startGame.isClicked()) {
+			gc.game.getBoard().reset();
 			Settings.CURRENT_STATE = STATES.GAME;
 		}
 		if(button_exit.isClicked()) {
